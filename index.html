@@ -4,89 +4,415 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Control de Stock</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;background:#f5f5f3;color:#1a1a1a;min-height:100vh}
-  .topbar{background:#fff;border-bottom:1px solid #e5e5e0;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:52px;position:sticky;top:0;z-index:100}
-  .topbar-title{font-weight:600;font-size:15px;display:flex;align-items:center;gap:8px}
-  .topbar-title svg{width:20px;height:20px;stroke:#555}
-  .ciclo-badge{font-size:11px;background:#f0f0ec;color:#666;padding:3px 10px;border-radius:20px}
-  .nav{background:#fff;border-bottom:1px solid #e5e5e0;padding:0 24px;display:flex;gap:2px}
-  .nav-btn{background:none;border:none;border-bottom:2px solid transparent;padding:10px 14px;font-size:13px;cursor:pointer;color:#666;margin-bottom:-1px;transition:color .15s}
-  .nav-btn.active{color:#1a1a1a;border-bottom-color:#1a1a1a;font-weight:500}
-  .nav-btn:hover:not(.active){color:#1a1a1a;background:#f5f5f3}
-  .container{max-width:1100px;margin:0 auto;padding:24px 20px}
-  .page{display:none}.page.active{display:block}
-  .metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
-  .metric{background:#fff;border:1px solid #e5e5e0;border-radius:10px;padding:14px 16px}
-  .metric-label{font-size:11px;color:#888;margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em}
-  .metric-value{font-size:22px;font-weight:600}
-  .metric-sub{font-size:11px;color:#aaa;margin-top:3px}
-  .card{background:#fff;border:1px solid #e5e5e0;border-radius:12px;overflow:hidden;margin-bottom:16px}
-  .card-header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid #e5e5e0;background:#fafaf8}
-  .card-title{font-weight:500;font-size:13px;color:#444}
-  table{width:100%;border-collapse:collapse;table-layout:fixed}
-  th{text-align:left;padding:9px 12px;font-size:11px;font-weight:500;color:#888;border-bottom:1px solid #e5e5e0;background:#fafaf8;text-transform:uppercase;letter-spacing:.04em}
-  td{padding:8px 12px;border-bottom:1px solid #f0f0ec;vertical-align:middle;font-size:13px}
-  tr:last-child td{border-bottom:none}
-  tr:hover td{background:#fafaf8}
-  .editable{cursor:pointer;border-radius:4px;padding:2px 5px;display:inline-block}
-  .editable:hover{background:#e8f0fe;color:#1a56db}
-  .inline-input{width:100%;border:1.5px solid #1a56db;border-radius:5px;padding:3px 7px;font-size:13px;outline:none}
-  .bar-wrap{width:70px;height:5px;background:#eee;border-radius:3px;display:inline-block;vertical-align:middle}
-  .bar{height:5px;border-radius:3px;transition:width .3s}
-  .badge{display:inline-block;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:500}
-  .ok{background:#dcfce7;color:#166534}
-  .warn{background:#fef9c3;color:#854d0e}
-  .danger{background:#fee2e2;color:#991b1b}
-  .btn{background:#fff;border:1px solid #d1d5db;border-radius:8px;padding:7px 14px;font-size:12px;cursor:pointer;color:#374151;transition:all .15s;display:inline-flex;align-items:center;gap:5px}
-  .btn:hover{background:#f9fafb;border-color:#9ca3af}
-  .btn:active{transform:scale(.98)}
-  .btn-primary{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
-  .btn-primary:hover{background:#333;border-color:#333}
-  .btn-danger{color:#dc2626;border-color:#fca5a5}
-  .btn-danger:hover{background:#fee2e2}
-  .btn-sm{padding:4px 9px;font-size:11px;border-radius:6px}
-  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
-  .form-group{display:flex;flex-direction:column;gap:5px}
-  .form-group label{font-size:11px;color:#555;font-weight:500;text-transform:uppercase;letter-spacing:.04em}
-  .form-group input,.form-group select{font-size:13px;padding:8px 10px;border:1px solid #d1d5db;border-radius:8px;background:#fff;color:#1a1a1a;width:100%;outline:none;transition:border .15s}
-  .form-group input:focus,.form-group select:focus{border-color:#1a56db}
-  .alert-row{display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:8px;margin-bottom:6px;font-size:12px}
-  .alert-danger{background:#fee2e2;color:#991b1b}
-  .alert-warn{background:#fef9c3;color:#854d0e}
-  .log-row{display:flex;justify-content:space-between;align-items:center;padding:8px 16px;border-bottom:1px solid #f0f0ec;font-size:12px}
-  .log-row:last-child{border-bottom:none}
-  .compra-row{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid #f0f0ec;font-size:13px}
-  .compra-row:last-child{border-bottom:none}
-  .empty{text-align:center;color:#aaa;padding:2.5rem;font-size:13px}
-  .toast{position:fixed;bottom:24px;right:24px;background:#1a1a1a;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;z-index:999;opacity:0;transform:translateY(8px);transition:all .25s;pointer-events:none}
-  .toast.show{opacity:1;transform:translateY(0)}
-  .toast.error{background:#dc2626}
-  .loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.7);display:flex;align-items:center;justify-content:center;z-index:200;font-size:13px;color:#666}
-  .spinner{width:20px;height:20px;border:2px solid #e5e5e0;border-top-color:#1a1a1a;border-radius:50%;animation:spin .6s linear infinite;margin-right:10px}
-  @keyframes spin{to{transform:rotate(360deg)}}
-  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-  .consumo-log{max-height:280px;overflow-y:auto}
-  .hint{font-size:11px;color:#aaa;margin-top:6px;padding:0 2px}
-  @media(max-width:700px){
-    .metrics{grid-template-columns:1fr 1fr}
-    .form-grid{grid-template-columns:1fr}
-    .two-col{grid-template-columns:1fr}
-    .container{padding:16px 12px}
+  :root {
+    --bg:       #0a0a0a;
+    --surface:  #111111;
+    --card:     #1c1c1c;
+    --border:   #2a2a2a;
+    --gold:     #f5a623;
+    --gold-dim: #b87818;
+    --white:    #ffffff;
+    --grey:     #888888;
+    --grey-dim: #444444;
+    --danger:   #c0392b;
+    --warn:     #e67e22;
+    --ok:       #27ae60;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    background: var(--bg);
+    color: var(--white);
+    min-height: 100vh;
+  }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .topbar-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 17px;
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    letter-spacing: -0.02em;
+  }
+  .topbar-title svg { stroke: var(--gold); }
+  .ciclo-badge {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--gold);
+    border: 1px solid var(--gold-dim);
+    padding: 4px 14px;
+    border-radius: 20px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+
+  /* ── NAV ── */
+  .nav {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    display: flex;
+    gap: 0;
+  }
+  .nav-btn {
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 14px 18px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--grey);
+    margin-bottom: -1px;
+    transition: color .15s, border-color .15s;
+    letter-spacing: 0.01em;
+  }
+  .nav-btn.active {
+    color: var(--gold);
+    border-bottom-color: var(--gold);
+    font-weight: 600;
+  }
+  .nav-btn:hover:not(.active) { color: var(--white); }
+
+  /* ── LAYOUT ── */
+  .container { max-width: 1140px; margin: 0 auto; padding: 32px 24px; }
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── METRICS ── */
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+  .metric {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 20px 18px;
+  }
+  .metric-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--gold);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 10px;
+  }
+  .metric-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 30px;
+    font-weight: 800;
+    color: var(--white);
+    line-height: 1;
+  }
+  .metric-sub { font-size: 11px; color: var(--grey); margin-top: 6px; }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 18px;
+  }
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .card-title {
+    font-weight: 600;
+    font-size: 12px;
+    color: var(--gold);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  /* ── TABLE ── */
+  table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  th {
+    text-align: left;
+    padding: 11px 16px;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--grey);
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+  }
+  td {
+    padding: 11px 16px;
+    border-bottom: 1px solid #1e1e1e;
+    vertical-align: middle;
+    font-size: 13px;
+    color: var(--white);
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #212121; }
+
+  /* ── EDITABLE ── */
+  .editable { cursor: pointer; border-radius: 4px; padding: 2px 6px; display: inline-block; }
+  .editable:hover { background: rgba(245,166,35,.12); color: var(--gold); }
+  .inline-input {
+    width: 100%;
+    border: 1.5px solid var(--gold);
+    border-radius: 5px;
+    padding: 4px 8px;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    background: #1a1a1a;
+    color: var(--white);
+  }
+
+  /* ── BAR ── */
+  .bar-wrap { width: 70px; height: 4px; background: var(--border); border-radius: 2px; display: inline-block; vertical-align: middle; }
+  .bar { height: 4px; border-radius: 2px; transition: width .3s; }
+
+  /* ── BADGES ── */
+  .badge { display: inline-block; font-size: 10px; padding: 2px 9px; border-radius: 10px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+  .ok    { background: rgba(39,174,96,.15);  color: #2ecc71; border: 1px solid rgba(39,174,96,.3); }
+  .warn  { background: rgba(230,126,34,.15); color: #f39c12; border: 1px solid rgba(230,126,34,.3); }
+  .danger{ background: rgba(192,57,43,.15);  color: #e74c3c; border: 1px solid rgba(192,57,43,.3); }
+
+  /* ── BUTTONS ── */
+  .btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 25px;
+    padding: 7px 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--grey);
+    transition: all .15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .btn:hover { border-color: var(--grey); color: var(--white); }
+  .btn:active { transform: scale(.97); }
+
+  .btn-primary {
+    background: var(--gold);
+    color: #000;
+    border-color: var(--gold);
+  }
+  .btn-primary:hover { background: #ffc13a; border-color: #ffc13a; color: #000; }
+
+  .btn-outline {
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+  .btn-outline:hover { background: rgba(245,166,35,.1); }
+
+  .btn-danger { color: #e74c3c; border-color: #3d1a1a; }
+  .btn-danger:hover { background: rgba(192,57,43,.12); border-color: #e74c3c; }
+
+  .btn-sm { padding: 4px 12px; font-size: 11px; }
+
+  /* ── FORMS ── */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group label {
+    font-size: 10px;
+    color: var(--gold);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+  }
+  .form-group input,
+  .form-group select {
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--white);
+    width: 100%;
+    outline: none;
+    transition: border .15s;
+  }
+  .form-group input:focus,
+  .form-group select:focus { border-color: var(--gold); }
+  .form-group select option { background: var(--surface); }
+
+  /* ── ALERTS ── */
+  .alert-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    border: 1px solid;
+  }
+  .alert-danger { background: rgba(192,57,43,.1); color: #e74c3c; border-color: rgba(192,57,43,.25); }
+  .alert-warn   { background: rgba(230,126,34,.1); color: #f39c12; border-color: rgba(230,126,34,.25); }
+
+  /* ── LOG ── */
+  .log-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    border-bottom: 1px solid #1e1e1e;
+    font-size: 12px;
+  }
+  .log-row:last-child { border-bottom: none; }
+  .log-row:hover { background: #212121; }
+
+  .compra-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    border-bottom: 1px solid #1e1e1e;
+    font-size: 13px;
+  }
+  .compra-row:last-child { border-bottom: none; }
+  .compra-row:hover { background: #212121; }
+
+  /* ── MISC ── */
+  .empty { text-align: center; color: var(--grey-dim); padding: 3rem; font-size: 13px; }
+  .hint  { font-size: 11px; color: var(--grey); margin-top: 8px; padding: 0 4px; }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    background: var(--card);
+    border: 1px solid var(--gold);
+    color: var(--white);
+    padding: 11px 20px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    z-index: 999;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all .25s;
+    pointer-events: none;
+  }
+  .toast.show  { opacity: 1; transform: translateY(0); }
+  .toast.error { border-color: #e74c3c; color: #e74c3c; }
+
+  /* ── LOADING ── */
+  .loading-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    font-size: 13px;
+    color: var(--gold);
+    font-weight: 600;
+    gap: 12px;
+  }
+  .spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin .6s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── TWO COL ── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .consumo-log { max-height: 300px; overflow-y: auto; }
+
+  /* ── SELECT in table ── */
+  td select {
+    font-size: 12px;
+    padding: 3px 8px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface);
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    outline: none;
+  }
+  td select:focus { border-color: var(--gold); }
+
+  /* ── STOCK DISP ── */
+  .stock-disp-box {
+    font-size: 12px;
+    color: var(--grey);
+    background: var(--surface);
+    padding: 9px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+  .stock-disp-box strong { color: var(--gold); font-size: 15px; }
+
+  /* ── PAGE PADDING ── */
+  #add-form > div:last-child { padding: 20px; }
+
+  @media(max-width: 700px) {
+    .metrics { grid-template-columns: 1fr 1fr; }
+    .form-grid { grid-template-columns: 1fr; }
+    .two-col { grid-template-columns: 1fr; }
+    .container { padding: 20px 14px; }
+    .topbar { padding: 0 16px; }
+    .nav { padding: 0 16px; }
+    .metric-value { font-size: 24px; }
   }
 </style>
 </head>
 <body>
 
+<!-- TOPBAR -->
 <div class="topbar">
   <div class="topbar-title">
-    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">
+      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+      <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+      <line x1="12" y1="22.08" x2="12" y2="12"/>
+    </svg>
     Control de Stock
   </div>
   <span class="ciclo-badge" id="ciclo-label">Cargando...</span>
 </div>
 
+<!-- NAV -->
 <div class="nav">
   <button class="nav-btn active" onclick="showPage('dashboard',this)">Dashboard</button>
   <button class="nav-btn" onclick="showPage('inventario',this)">Inventario</button>
@@ -96,6 +422,7 @@
 
 <div class="container">
 
+  <!-- DASHBOARD -->
   <div id="page-dashboard" class="page active">
     <div class="metrics" id="metrics-grid">
       <div class="metric"><div class="metric-label">Cargando</div><div class="metric-value">...</div></div>
@@ -118,6 +445,7 @@
     </div>
   </div>
 
+  <!-- INVENTARIO -->
   <div id="page-inventario" class="page">
     <div class="card">
       <div class="card-header">
@@ -140,7 +468,7 @@
 
     <div id="add-form" style="display:none" class="card">
       <div class="card-header"><span class="card-title">Nuevo insumo</span></div>
-      <div style="padding:16px">
+      <div style="padding:20px">
         <div class="form-grid">
           <div class="form-group"><label>Nombre</label><input id="f-nombre" placeholder="Ej: Harina 000"></div>
           <div class="form-group"><label>Unidad</label>
@@ -155,7 +483,7 @@
           <div class="form-group"><label>Costo por unidad ($)</label><input id="f-costo" type="number" min="0" step="0.01" placeholder="0.00"></div>
           <div class="form-group"><label>Categoría</label><input id="f-cat" placeholder="Ej: Lácteos, Secos, Aceites..."></div>
         </div>
-        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px">
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:6px">
           <button class="btn" onclick="toggleAddForm()">Cancelar</button>
           <button class="btn btn-primary" onclick="addInsumo()">Guardar insumo</button>
         </div>
@@ -163,21 +491,22 @@
     </div>
   </div>
 
+  <!-- CONSUMO -->
   <div id="page-consumo" class="page">
     <div class="two-col">
       <div class="card">
         <div class="card-header"><span class="card-title">Registrar uso de insumo</span></div>
-        <div style="padding:16px;display:flex;flex-direction:column;gap:12px">
+        <div style="padding:20px;display:flex;flex-direction:column;gap:14px">
           <div class="form-group">
             <label>Insumo</label>
             <select id="c-insumo" onchange="updateStockDisp()"></select>
           </div>
-          <div style="font-size:12px;color:#888;background:#f5f5f3;padding:8px 10px;border-radius:7px">
+          <div class="stock-disp-box">
             Stock disponible: <strong id="c-stock-disp">—</strong>
           </div>
           <div class="form-group"><label>Cantidad usada</label><input id="c-cantidad" type="number" min="0.01" step="0.01" placeholder="0"></div>
           <div class="form-group"><label>Motivo / producto elaborado</label><input id="c-motivo" placeholder="Ej: Producción pan del día"></div>
-          <button class="btn btn-primary" style="width:100%" onclick="registrarConsumo()">✓ Registrar consumo</button>
+          <button class="btn btn-primary" style="width:100%;justify-content:center;border-radius:8px;padding:11px" onclick="registrarConsumo()">✓ Registrar consumo</button>
         </div>
       </div>
       <div class="card">
@@ -190,11 +519,12 @@
     </div>
   </div>
 
+  <!-- COMPRAS -->
   <div id="page-compras" class="page">
     <div class="card">
       <div class="card-header">
         <span class="card-title">Lista de compra sugerida — próximo ciclo 15 días</span>
-        <span style="font-size:11px;color:#aaa">Basado en consumo promedio registrado</span>
+        <span style="font-size:11px;color:var(--grey)">Basado en consumo promedio registrado</span>
       </div>
       <div id="compras-list"><div class="empty">Cargando...</div></div>
     </div>
@@ -222,26 +552,19 @@ async function sbGet(table, params='') {
   if(!r.ok) throw new Error(await r.text());
   return r.json();
 }
-
 async function sbPost(table, body) {
   const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {method:'POST', headers, body:JSON.stringify(body)});
   if(!r.ok) throw new Error(await r.text());
   return r.json();
 }
-
 async function sbPatch(table, id, body) {
   const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {method:'PATCH', headers, body:JSON.stringify(body)});
   if(!r.ok) throw new Error(await r.text());
   return r.json();
 }
-
 async function sbDelete(table, id) {
   const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {method:'DELETE', headers});
   if(!r.ok) throw new Error(await r.text());
-}
-
-async function initDB() {
-  await fetch(`${SUPABASE_URL}/rest/v1/rpc/init_tables`, {method:'POST', headers, body:'{}'}).catch(()=>{});
 }
 
 function showToast(msg, isError=false) {
@@ -250,7 +573,6 @@ function showToast(msg, isError=false) {
   t.className = 'toast show' + (isError?' error':'');
   setTimeout(()=>t.className='toast', 2800);
 }
-
 function setLoading(v) {
   document.getElementById('loading').style.display = v ? 'flex' : 'none';
 }
@@ -281,21 +603,18 @@ function getStatus(ins) {
   if(ins.stock <= ins.minimo) return 'warn';
   return 'ok';
 }
-
 function getDias(ins) {
   const avg = getAvgDiario(ins.id);
   if(avg<=0) return '—';
   return (ins.stock/avg).toFixed(1);
 }
-
 function getPct(ins) {
   if(ins.minimo<=0) return 100;
-  return Math.min(100,Math.round((ins.stock/(ins.minimo*2))*100));
+  return Math.min(100, Math.round((ins.stock/(ins.minimo*2))*100));
 }
-
 function barColor(ins) {
   const s = getStatus(ins);
-  return s==='ok'?'#16a34a':s==='warn'?'#ca8a04':'#dc2626';
+  return s==='ok'?'#27ae60':s==='warn'?'#f39c12':'#e74c3c';
 }
 
 function renderCiclo() {
@@ -311,30 +630,42 @@ function renderDash() {
   const totalConsumo = consumos.reduce((s,c)=>s+c.cantidad,0);
 
   document.getElementById('metrics-grid').innerHTML=`
-    <div class="metric"><div class="metric-label">Insumos totales</div><div class="metric-value">${insumos.length}</div></div>
-    <div class="metric"><div class="metric-label">Stock crítico</div><div class="metric-value" style="color:#dc2626">${criticos}</div></div>
-    <div class="metric"><div class="metric-label">Con consumo registrado</div><div class="metric-value">${conConsumo}</div></div>
-    <div class="metric"><div class="metric-label">Total consumido</div><div class="metric-value" style="font-size:17px">${totalConsumo.toFixed(1)} u.</div></div>
+    <div class="metric">
+      <div class="metric-label">Insumos totales</div>
+      <div class="metric-value">${insumos.length}</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Stock crítico</div>
+      <div class="metric-value" style="color:#e74c3c">${criticos}</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Con consumo</div>
+      <div class="metric-value">${conConsumo}</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Total consumido</div>
+      <div class="metric-value" style="font-size:22px">${totalConsumo.toFixed(1)}<span style="font-size:13px;color:var(--grey);font-family:'DM Sans',sans-serif;font-weight:400;margin-left:4px">u.</span></div>
+    </div>
   `;
 
   const alertas = insumos.filter(i=>getStatus(i)!=='ok');
   document.getElementById('alertas-section').innerHTML = alertas.length ? `
-    <div style="margin-bottom:16px">${alertas.map(i=>`
+    <div style="margin-bottom:20px">${alertas.map(i=>`
       <div class="alert-row alert-${getStatus(i)}">
-        ⚠️ <strong>${i.nombre}</strong> — stock actual: ${i.stock} ${i.unidad} / mínimo: ${i.minimo} ${i.unidad}
+        ⚠ <strong>${i.nombre}</strong> — stock actual: ${i.stock} ${i.unidad} / mínimo: ${i.minimo} ${i.unidad}
       </div>`).join('')}</div>` : '';
 
   document.getElementById('dash-table').innerHTML = insumos.length ? insumos.map(i=>{
     const s=getStatus(i);
     const avg=getAvgDiario(i.id);
     return `<tr>
-      <td style="font-weight:500">${i.nombre}</td>
-      <td>${i.stock} ${i.unidad}</td>
+      <td style="font-weight:600">${i.nombre}</td>
+      <td>${i.stock} <span style="color:var(--grey);font-size:11px">${i.unidad}</span></td>
       <td><div class="bar-wrap"><div class="bar" style="width:${getPct(i)}%;background:${barColor(i)}"></div></div></td>
-      <td>${getDias(i)}</td>
+      <td style="color:var(--gold);font-weight:600">${getDias(i)}</td>
       <td><span class="badge ${s}">${s==='ok'?'OK':s==='warn'?'Bajo':'Crítico'}</span></td>
-      <td style="color:#888">${avg>0?avg.toFixed(2)+' '+i.unidad+'/día':'—'}</td>
-      <td style="color:#aaa">${i.categoria||'—'}</td>
+      <td style="color:var(--grey)">${avg>0?avg.toFixed(2)+' '+i.unidad+'/día':'—'}</td>
+      <td style="color:var(--grey-dim)">${i.categoria||'—'}</td>
     </tr>`;
   }).join('') : '<tr><td colspan="7" class="empty">No hay insumos cargados todavía.</td></tr>';
 }
@@ -344,7 +675,7 @@ function renderInv() {
     <tr id="row-${i.id}">
       <td><span class="editable" onclick="editCell(${i.id},'nombre',this)">${i.nombre}</span></td>
       <td>
-        <select style="font-size:12px;padding:2px 6px;border:1px solid #e5e5e0;border-radius:5px" onchange="saveField(${i.id},'unidad',this.value)">
+        <select onchange="saveField(${i.id},'unidad',this.value)">
           ${['kg','g','L','ml','unidad','caja','litro'].map(u=>`<option${i.unidad===u?' selected':''}>${u}</option>`).join('')}
         </select>
       </td>
@@ -352,7 +683,7 @@ function renderInv() {
       <td><span class="editable" onclick="editCell(${i.id},'minimo',this)">${i.minimo}</span></td>
       <td><span class="editable" onclick="editCell(${i.id},'costo',this)">$${i.costo||0}</span></td>
       <td><span class="editable" onclick="editCell(${i.id},'categoria',this)">${i.categoria||'—'}</span></td>
-      <td style="display:flex;gap:6px">
+      <td style="display:flex;gap:8px">
         <button class="btn btn-sm btn-danger" onclick="deleteInsumo(${i.id})">🗑 Eliminar</button>
       </td>
     </tr>`).join('') : '<tr><td colspan="7" class="empty">Sin insumos. Agregá el primero con el botón de arriba.</td></tr>';
@@ -368,7 +699,7 @@ function editCell(id, field, el) {
     onkeydown="if(event.key==='Enter')this.blur();if(event.key==='Escape'){renderInv()}"
     style="width:100%">`;
   const inp=el.querySelector('input');
-  inp.focus();inp.select();
+  inp.focus(); inp.select();
 }
 
 async function commitEdit(id, field, inp) {
@@ -388,12 +719,9 @@ async function saveField(id, field, val) {
   try {
     await sbPatch('insumos', id, {[field]:val});
     showToast('Guardado ✓');
-  } catch(e) {
-    showToast('Error al guardar', true);
-  }
+  } catch(e) { showToast('Error al guardar', true); }
   setLoading(false);
-  renderInv();
-  renderDash();
+  renderInv(); renderDash();
 }
 
 async function deleteInsumo(id) {
@@ -410,9 +738,7 @@ async function deleteInsumo(id) {
     insumos = insumos.filter(i=>i.id!==id);
     showToast('Insumo eliminado');
   }
-  setLoading(false);
-  renderInv();
-  renderDash();
+  setLoading(false); renderInv(); renderDash();
 }
 
 function toggleAddForm() {
@@ -438,8 +764,7 @@ async function addInsumo() {
     ['f-nombre','f-stock','f-min','f-costo','f-cat'].forEach(id=>document.getElementById(id).value='');
     toggleAddForm();
     showToast('Insumo agregado ✓');
-    renderInv();
-    renderDash();
+    renderInv(); renderDash();
   } catch(e) {
     showToast('Error al guardar. Verificá que las tablas existan en Supabase.', true);
     console.error(e);
@@ -457,11 +782,11 @@ function renderConsumo() {
     const ins=insumos.find(i=>i.id===c.insumo_id);
     return `<div class="log-row">
       <div>
-        <strong>${ins?ins.nombre:'?'}</strong>
-        <span style="color:#aaa;margin-left:6px">${c.motivo||'sin motivo'}</span>
+        <span style="font-weight:600;color:var(--white)">${ins?ins.nombre:'?'}</span>
+        <span style="color:var(--grey);margin-left:8px;font-size:11px">${c.motivo||'sin motivo'}</span>
       </div>
-      <div style="color:#aaa;text-align:right;font-size:11px">
-        ${c.cantidad} ${ins?ins.unidad:''}<br>${c.fecha}
+      <div style="color:var(--grey);text-align:right;font-size:11px">
+        <span style="color:var(--gold);font-weight:600">${c.cantidad} ${ins?ins.unidad:''}</span><br>${c.fecha}
       </div>
     </div>`;
   }).join('');
@@ -492,8 +817,7 @@ async function registrarConsumo() {
     document.getElementById('c-cantidad').value='';
     document.getElementById('c-motivo').value='';
     showToast('Consumo registrado ✓');
-    renderConsumo();
-    renderDash();
+    renderConsumo(); renderDash();
   } catch(e) {
     showToast('Error al registrar', true);
     console.error(e);
@@ -530,12 +854,12 @@ function renderCompras() {
     const costo=r.necesario>0&&r.ins.costo?'$'+(r.necesario*r.ins.costo).toLocaleString('es-AR',{maximumFractionDigits:0}):'—';
     return `<div class="compra-row">
       <div>
-        <div style="font-weight:500">${r.ins.nombre} <span class="badge ${s}" style="margin-left:6px">${s==='ok'?'OK':s==='warn'?'Bajo':'Crítico'}</span></div>
-        <div style="font-size:11px;color:#aaa;margin-top:3px">${r.avg>0?'Promedio: '+r.avg.toFixed(2)+' '+r.ins.unidad+'/día':'Sin datos de consumo aún'}</div>
+        <div style="font-weight:600;display:flex;align-items:center;gap:8px">${r.ins.nombre} <span class="badge ${s}">${s==='ok'?'OK':s==='warn'?'Bajo':'Crítico'}</span></div>
+        <div style="font-size:11px;color:var(--grey);margin-top:4px">${r.avg>0?'Promedio: '+r.avg.toFixed(2)+' '+r.ins.unidad+'/día':'Sin datos de consumo aún'}</div>
       </div>
       <div style="text-align:right">
-        <div style="font-weight:600">${cant} ${r.ins.unidad}</div>
-        <div style="font-size:11px;color:#aaa">${costo}</div>
+        <div style="font-weight:700;font-size:15px;color:var(--gold)">${cant} <span style="font-size:12px;color:var(--grey)">${r.ins.unidad}</span></div>
+        <div style="font-size:11px;color:var(--grey);margin-top:3px">${costo}</div>
       </div>
     </div>`;
   }).join('');
@@ -557,7 +881,6 @@ async function init() {
   await loadAll();
   renderDash();
 }
-
 init();
 </script>
 
@@ -593,6 +916,12 @@ init();
 
   create policy "acceso total insumos" on insumos for all using (true) with check (true);
   create policy "acceso total consumos" on consumos for all using (true) with check (true);
+
+=============================================================
+-->
+
+</body>
+</html>
 
 =============================================================
 -->
